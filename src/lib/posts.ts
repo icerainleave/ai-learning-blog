@@ -7,7 +7,7 @@ export interface PostMeta {
   title: string;
   date: string;
   excerpt: string;
-  tags: string[];
+  tags: string[] | readonly string[];
   cover?: string;
 }
 
