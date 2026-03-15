@@ -38,6 +38,10 @@ export function HomePage() {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
             最新文章
           </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Posts loaded: {posts.length}
+            {posts[0]?.title ? ` · First: ${posts[0].title}` : ''}
+          </p>
 
           {loading ? (
             <div className="flex items-center justify-center py-20">
