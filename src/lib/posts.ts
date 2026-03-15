@@ -16,11 +16,29 @@ export interface Post extends PostMeta {
 }
 
 // 使用 Vite 的 glob 导入
-const modules = import.meta.glob('../posts/*.md', {
+const rootModules = import.meta.glob('/posts/*.md', {
   query: '?raw',
   import: 'default',
   eager: true,
 }) as Record<string, string>;
+
+const relativeModules = import.meta.glob('../posts/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
+const parentModules = import.meta.glob('../../posts/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
+const modules: Record<string, string> = {
+  ...rootModules,
+  ...relativeModules,
+  ...parentModules,
+};
 
 export function getPostSlugs(): string[] {
   return Object.keys(modules).map(path => {
@@ -31,8 +49,12 @@ export function getPostSlugs(): string[] {
 
 export function getPostBySlug(slug: string): Post | null {
   try {
-    const path = `../posts/${slug}.md`;
-    const content = modules[path];
+    const candidates = [
+      `/posts/${slug}.md`,
+      `../posts/${slug}.md`,
+      `../../posts/${slug}.md`,
+    ];
+    const content = candidates.map(p => modules[p]).find(Boolean);
 
     if (!content) return null;
 
