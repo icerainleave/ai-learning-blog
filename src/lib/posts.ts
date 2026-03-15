@@ -16,7 +16,11 @@ export interface Post extends PostMeta {
 }
 
 // 使用 Vite 的 glob 导入
-const modules = import.meta.glob('/posts/*.md', { as: 'raw', eager: true }) as Record<string, string>;
+const modules = import.meta.glob('/posts/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
 
 export function getPostSlugs(): string[] {
   return Object.keys(modules).map(path => {
