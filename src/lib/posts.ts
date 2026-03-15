@@ -1,6 +1,6 @@
-import matter from 'gray-matter';
 import { format, type Locale } from 'date-fns';
 import { zhCN, enUS } from 'date-fns/locale';
+import { posts as generatedPosts } from './posts.generated';
 
 export interface PostMeta {
   slug: string;
@@ -15,59 +15,15 @@ export interface Post extends PostMeta {
   content: string;
 }
 
-// 使用 Vite 的 glob 导入
-const rootModules = import.meta.glob('/posts/*.md', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>;
-
-const relativeModules = import.meta.glob('../posts/*.md', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>;
-
-const parentModules = import.meta.glob('../../posts/*.md', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>;
-
-const modules: Record<string, string> = {
-  ...rootModules,
-  ...relativeModules,
-  ...parentModules,
-};
-
-function normalizeSlug(path: string): string {
-  const clean = path.split('?')[0];
-  const filename = clean.split('/').pop() || '';
-  return filename.replace('.md', '');
-}
-
 export function getPostSlugs(): string[] {
-  return Object.keys(modules).map(normalizeSlug);
+  return generatedPosts.map((post) => post.slug);
 }
 
 export function getPostBySlug(slug: string): Post | null {
   try {
-    const entry = Object.entries(modules).find(([path]) => normalizeSlug(path) === slug);
-    const content = entry ? entry[1] : undefined;
-
-    if (!content) return null;
-
-    const { data, content: markdown } = matter(content);
-
-    return {
-      slug,
-      title: data.title || 'Untitled',
-      date: data.date || new Date().toISOString(),
-      excerpt: data.excerpt || '',
-      tags: data.tags || [],
-      cover: data.cover,
-      content: markdown,
-    };
+    const post = generatedPosts.find((p) => p.slug === slug);
+    if (!post) return null;
+    return { ...post };
   } catch (error) {
     console.error(`Error loading post ${slug}:`, error);
     return null;
@@ -75,17 +31,7 @@ export function getPostBySlug(slug: string): Post | null {
 }
 
 export function getAllPosts(): PostMeta[] {
-  const slugs = getPostSlugs();
-  const posts = slugs.map(slug => {
-    const post = getPostBySlug(slug);
-    if (!post) return null;
-    const { content, ...meta } = post;
-    return meta;
-  });
-
-  return (posts.filter(Boolean) as PostMeta[]).sort((a, b) =>
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  return generatedPosts.map(({ content, ...meta }) => meta);
 }
 
 export function formatDate(dateString: string, locale: string = 'zh'): string {
