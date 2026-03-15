@@ -40,21 +40,20 @@ const modules: Record<string, string> = {
   ...parentModules,
 };
 
+function normalizeSlug(path: string): string {
+  const clean = path.split('?')[0];
+  const filename = clean.split('/').pop() || '';
+  return filename.replace('.md', '');
+}
+
 export function getPostSlugs(): string[] {
-  return Object.keys(modules).map(path => {
-    const filename = path.split('/').pop() || '';
-    return filename.replace('.md', '');
-  });
+  return Object.keys(modules).map(normalizeSlug);
 }
 
 export function getPostBySlug(slug: string): Post | null {
   try {
-    const candidates = [
-      `/posts/${slug}.md`,
-      `../posts/${slug}.md`,
-      `../../posts/${slug}.md`,
-    ];
-    const content = candidates.map(p => modules[p]).find(Boolean);
+    const entry = Object.entries(modules).find(([path]) => normalizeSlug(path) === slug);
+    const content = entry ? entry[1] : undefined;
 
     if (!content) return null;
 
